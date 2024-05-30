@@ -157,9 +157,11 @@ def input_error_change(func):
         try:
             return func(*args, **kwargs)
         except ValueError:
+            if len(args[0]) == 2:
+                return "Give me new phone please."
             if len(args[0]) == 1:
-                return "Give me phone please."
-            return "Give me name and phone please."
+                return "Give me old and new phone please."
+            return "Give me name and tow phones please."
         except KeyError:
             return "Contact not find. Give me another name please."
         except AssertionError as e:
@@ -200,10 +202,13 @@ def input_error_find(func):
 @input_error_add
 def add_contact(args, book):
     name, phone = args
-    record = Record(name)
-    record.add_phone(phone)
-    book.add_record(record)
-    return "Contact added."
+    if book.find(name):
+        return book.update(name, phone=phone)
+    else:
+        record = Record(name)
+        record.add_phone(phone)
+        book.add_record(record)
+        return "Contact added."
 
 
 @input_error_find
@@ -218,8 +223,16 @@ def find_contact(args, book):
 
 @input_error_change
 def change_contact(args, book):
-    name, phone = args
-    return book.update(name, phone=phone)
+    name, phone_old, phone_new = args
+    record = book.find(name)
+    if record:
+        try:
+            record.edit_phone(phone_old, phone_new)
+            return f"Phone number {phone_old} change to {phone_new}."
+        except ValueError as e:
+            return str(e)
+    else:
+        return f"Contact {name} not found."
 
 
 @input_error
